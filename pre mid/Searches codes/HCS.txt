@@ -1,0 +1,38 @@
+#Implement Simple HCS
+MyGraph = {
+    'A' : ['B','C'],
+    'B' : ['A','C','D'],
+    'C' : ['A','B','E'],
+    'D' : ['B','E','F'],
+    'E' : ['C','D','F'],
+    'F' : ['D','E'],
+}
+HeuristicVales={
+    'A' : 25,
+    'B' : 8,
+    'C' : 20,
+    'D' : 6,
+    'E' : 12,
+    'F' : 0,
+}
+StartNode='A'
+GoalNode='F'
+
+def HCS_simple():
+    Node=StartNode
+    print('Traversing::')
+    while True:
+        print(Node)
+        if Node==GoalNode:
+            print('Goal Node Found!')
+            break
+        minHeurNode=Node
+        for n in MyGraph[Node]:
+            if HeuristicVales[minHeurNode] > HeuristicVales[n]:
+                minHeurNode=n
+        if minHeurNode==Node:
+            print('Maxima Goal point '+Node+' is Found!')
+            break
+        Node=minHeurNode
+HCS_simple()
+            
