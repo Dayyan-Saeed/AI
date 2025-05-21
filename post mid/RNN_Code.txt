@@ -1,0 +1,105 @@
+# Import necessary libraries
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+from keras.models import Sequential
+from keras.layers import Embedding, SimpleRNN, Dense, Activation
+
+def load_and_prepare_data(file_path, text_column, target_column):
+    # Load the CSV file
+    data = pd.read_csv(file_path)
+
+    # Display the first few rows of the dataframe
+    print(data.head())
+
+    # Check for any missing values
+    print(data.isnull().sum())
+
+    # Drop any rows with missing values (if any)
+    data.dropna(inplace=True)
+
+    # Split the data into input (X) and output (Y)
+    X = data[text_column].values
+    Y = data[target_column].values
+
+    # Split the dataset into training and testing sets
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+    return X_train, X_test, Y_train, Y_test
+
+def tokenize_and_pad_sequences(X_train, X_test, num_words=5000, max_len=500):
+    # Tokenize the text data
+    tokenizer = Tokenizer(num_words=num_words)
+    tokenizer.fit_on_texts(X_train)
+
+    X_train = tokenizer.texts_to_sequences(X_train)
+    X_test = tokenizer.texts_to_sequences(X_test)
+
+    # Pad sequences to ensure uniform input size
+    X_train = pad_sequences(X_train, maxlen=max_len)
+    X_test = pad_sequences(X_test, maxlen=max_len)
+
+    return X_train, X_test, tokenizer
+
+def build_and_train_model(X_train, Y_train, X_test, Y_test, input_dim=5000, output_dim=32, input_length=500, epochs=5, batch_size=128):
+    # Define the model
+    model = Sequential()
+    model.add(Embedding(input_dim=input_dim, output_dim=output_dim, input_length=input_length))
+    model.add(SimpleRNN(units=16, activation='relu'))
+    model.add(Dense(units=1, activation='sigmoid'))
+
+    # Compile the model
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    # Fit the model
+    history = model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_test, Y_test))
+
+    # Evaluate the model
+    loss, accuracy = model.evaluate(X_test, Y_test, verbose=0)
+    print(f"Test Accuracy: {accuracy*100:.2f}%")
+
+    return history
+
+def plot_training_history(history):
+    # Plot training & validation accuracy values
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('Model accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+
+    # Plot training & validation loss values
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+
+# Example usage:
+file_path = '/content/imdb_top_1000.csv'
+text_column = 'Overview'  # specify the text column for this dataset
+target_column = 'IMDB_Rating'  # specify the target column for this dataset (assuming binary sentiment)
+
+# Load and prepare data
+X_train, X_test, Y_train, Y_test = load_and_prepare_data(file_path, text_column, target_column)
+
+# Convert target to binary sentiment for demonstration (e.g., IMDB rating >= 7 as positive)
+Y_train = np.where(Y_train >= 7, 1, 0)
+Y_test = np.where(Y_test >= 7, 1, 0)
+
+# Tokenize and pad sequences
+X_train, X_test, tokenizer = tokenize_and_pad_sequences(X_train, X_test)
+
+# Build and train model
+history = build_and_train_model(X_train, Y_train, X_test, Y_test)
+
+# Plot training history
+plot_training_history(history)

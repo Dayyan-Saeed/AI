@@ -1,0 +1,10 @@
+	Minmax
+	AlphaBita
+	Genetic_problem
+	Prop_logics
+
+Machine Learning
+	Naive Bayes(with & without dataset)
+	KNN (with & without dataset)
+	K_Means (with & without dataset)
+	(CNN, RNN)
